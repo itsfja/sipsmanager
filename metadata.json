@@ -1,0 +1,6 @@
+{
+  "name": "Earthbox Planner",
+  "description": "A comprehensive mobile-first Earthbox planting companion featuring specific item layouts, growth timeline simulations, weather integration, freeze risk notifications, and water depletion alerts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
