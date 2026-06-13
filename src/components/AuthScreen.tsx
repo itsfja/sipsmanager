@@ -262,7 +262,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
 
       {/* App Version Indicator */}
       <div className="text-[10px] text-zinc-400 font-mono mt-6 text-center tracking-wide" id="auth-version-indicator">
-        App Version: <span className="font-bold text-zinc-500">v2.5.0</span> (Capacitor Native Build)
+        App Version: <span className="font-bold text-zinc-500">v2.5.1</span> (Capacitor Native Build)
       </div>
     </div>
   );
