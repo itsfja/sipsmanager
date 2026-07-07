@@ -68,6 +68,8 @@ export interface PlanterBox {
   soilMoisture: number; // 0 to 100%
   notes: string[];
   refilledAt?: number;
+  planterType?: 'earthbox' | 'hozelock_growbag' | 'emsco_citypicker' | 'linex_raised' | 'ourwarm_windowsill' | 'biolan_planter' | 'oasesbox' | 'earthbox_junior';
+  growBagType?: string;
 }
 
 export interface WeatherData {

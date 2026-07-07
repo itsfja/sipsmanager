@@ -110,10 +110,10 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
           <Trees className="w-8 h-8 text-white animate-pulse" />
         </div>
         <h1 className="font-display font-black text-2xl tracking-normal text-zinc-900">
-          Earthbox Planner
+          SIPS Manager
         </h1>
         <p className="text-zinc-500 text-xs mt-1 max-w-[280px]">
-          Simulated Android Application For Sub-Irrigation Box Management
+          Sub-Irrigation Planter & Grow Bag Manager
         </p>
       </motion.div>
 
@@ -262,7 +262,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
 
       {/* App Version Indicator */}
       <div className="text-[10px] text-zinc-400 font-mono mt-6 text-center tracking-wide" id="auth-version-indicator">
-        App Version: <span className="font-bold text-zinc-500">v2.5.1</span> (Capacitor Native Build)
+        App Version: <span className="font-bold text-zinc-500">v2.6.0</span> (Capacitor Native Build)
       </div>
     </div>
   );

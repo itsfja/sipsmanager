@@ -3,9 +3,27 @@ import { PlanterBox, PlantType, WeatherData, GeocodeResult } from '../types';
 import PlantProgressViewer from './PlantProgressViewer';
 import EarthboxLayoutDiagram from './EarthboxLayoutDiagram';
 import { calculateLocalWaterMultiplier } from '../utils/weather';
-import { getLocalPlantName, localizeMessage } from '../utils/localization';
+import { getLocalPlantName, localizeMessage, isUSPostcode } from '../utils/localization';
 import { Droplet, Calendar, ShieldAlert, Sun, Info, PlusCircle, HelpCircle, PenTool, CheckSquare, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+const PLANTER_METADATA: Record<string, { name: string; capacityG: number; capacityL: number }> = {
+  earthbox: { name: 'Earthbox Classic Model #01', capacityG: 3.0, capacityL: 11.0 },
+  hozelock_growbag: { name: 'Hozelock Grow Bag', capacityG: 4.0, capacityL: 15.0 },
+  emsco_citypicker: { name: 'Emsco City Picker', capacityG: 2.0, capacityL: 7.5 },
+  linex_raised: { name: 'Linex Raised Bed', capacityG: 1.8, capacityL: 6.8 },
+  ourwarm_windowsill: { name: 'OurWarm Windowsill Herb Planter Box', capacityG: 0.3, capacityL: 1.2 },
+  biolan_planter: { name: 'Biolan Watering Basin', capacityG: 10.5, capacityL: 40.0 },
+  oasesbox: { name: 'Oasesbox Modular Planter', capacityG: 4.0, capacityL: 15.0 },
+  earthbox_junior: { name: 'Earthbox Junior', capacityG: 1.0, capacityL: 3.8 },
+};
+
+const UK_GROW_BAG_METADATA: Record<string, { name: string; volumeL: number }> = {
+  standard_uk_33: { name: 'Standard UK Grow Bag (33L)', volumeL: 33 },
+  levington_tomorite_giant: { name: 'Levington Tomorite Giant (40L)', volumeL: 40 },
+  westland_bigtom: { name: 'Westland Big Tom Super Soil (50L)', volumeL: 50 },
+  clover_organic_choice: { name: 'Clover Organic Choice (33L)', volumeL: 33 },
+};
 
 interface PlanterCardProps {
   key?: string;
@@ -45,6 +63,8 @@ export default function PlanterCard({
   const daysRemaining = Math.max(0, plant.daysToHarvest - daysPlanted);
   const progressPercent = Math.min(100, Math.round((daysPlanted / plant.daysToHarvest) * 100));
 
+  const isHozelock = planter.planterType === 'hozelock_growbag';
+
   // Determine local water evaporation coefficient matching meteorological data
   const latFactor = geocode ? geocode.latitude : 34;
   const tempFactor = weather ? weather.temp : 72;
@@ -58,8 +78,11 @@ export default function PlanterCard({
     plant.waterConsumption === 'Moderate' ? 0.45 : 0.25;
 
   const adjustedDailyBurn = baseBurnRate * localCoeff;
-  // Reservoir volume is 3 Gallons
-  const totalVolumeGallons = 3.0;
+  
+  // Dynamic capacity and metadata retrieval for all planter systems
+  const planterTypeKey = planter.planterType || 'earthbox';
+  const planterMeta = PLANTER_METADATA[planterTypeKey] || PLANTER_METADATA.earthbox;
+  const totalVolumeGallons = planterMeta.capacityG;
   
   // Calculate simulated current reservoir level based on last refill timestamp
   // Let's assume reservoir diminishes hourly, unless refilled
@@ -74,6 +97,20 @@ export default function PlanterCard({
   );
   
   const daysUntilEmpty = Math.max(0, parseFloat(((totalVolumeGallons * (currentReservoirPercent / 100)) / adjustedDailyBurn).toFixed(1)));
+
+  // Localized capacity and burn rate formatting for EU/UK vs US
+  const isUS = isUSPostcode(postcode);
+  const displayCapacityStr = isUS
+    ? `${planterMeta.capacityG}G CAP`
+    : `${planterMeta.capacityL}L CAP`;
+
+  const burnRateDisplayValue = isUS
+    ? adjustedDailyBurn
+    : adjustedDailyBurn * 3.78541;
+
+  const burnRateDisplayUnit = isUS
+    ? 'Gallons/day'
+    : 'litres/day';
 
   // Analyze solar compatibility mismatch
   const getSolarMismatches = () => {
@@ -134,8 +171,10 @@ export default function PlanterCard({
       {/* Planter Header Block */}
       <div className="bg-earth-600 text-white p-4 flex justify-between items-start">
         <div>
-          <span className="text-[10px] uppercase font-mono font-bold tracking-widest text-earth-200">
-            Earthbox Model #01
+          <span className="text-[10px] uppercase font-mono font-bold tracking-widest text-earth-200 block">
+            {planter.planterType === 'hozelock_growbag' && planter.growBagType
+              ? `${planterMeta.name} • ${UK_GROW_BAG_METADATA[planter.growBagType]?.name || 'Standard Grow Bag'}`
+              : planterMeta.name}
           </span>
           <h2 className="text-md font-serif font-black text-white leading-tight mt-0.5">
             {planter.name}
@@ -193,7 +232,7 @@ export default function PlanterCard({
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-mono font-bold tracking-wider text-zinc-500 uppercase flex items-center gap-1">
                   <Droplet className="w-3.5 h-3.5 text-cyan-600 animate-pulse" />
-                  SUB-IRRIGATED RESERVOIR LEVEL (3G CAP)
+                  SUB-IRRIGATED RESERVOIR LEVEL ({displayCapacityStr})
                 </span>
                 <span className="font-mono text-xs font-black text-cyan-700">
                   {currentReservoirPercent}% FULL
@@ -228,7 +267,7 @@ export default function PlanterCard({
                 </div>
               ) : (
                 <div className="flex justify-between items-baseline text-[11px] text-zinc-500 px-0.5">
-                  <span>Consumption burn Rate: {adjustedDailyBurn.toFixed(2)} Gallons/day</span>
+                  <span>Consumption burn rate: {burnRateDisplayValue.toFixed(2)} {burnRateDisplayUnit}</span>
                   <span className="font-medium text-zinc-700">Empty in ~{daysUntilEmpty} days</span>
                 </div>
               )}
@@ -273,9 +312,9 @@ export default function PlanterCard({
                   <div className="flex flex-col pr-2">
                     <span className="font-semibold text-zinc-900 flex items-center gap-1">
                       <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
-                      Climbing Frame / Cage Frame
+                      {isHozelock ? "Wood Cane Supports" : "Climbing Frame / Cage Frame"}
                     </span>
-                    <span className="text-[10.5px] text-zinc-500">Requires sturdy external framework</span>
+                    <span className="text-[10.5px] text-zinc-500">{isHozelock ? "Insert canes through integrated slots" : "Requires sturdy external framework"}</span>
                   </div>
                   <div>
                     <button
@@ -286,13 +325,13 @@ export default function PlanterCard({
                         : 'bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-zinc-200'
                       }`}
                     >
-                      {frameInstalled ? 'Installed ✓' : 'Setup Trellis'}
+                      {frameInstalled ? 'Installed ✓' : (isHozelock ? 'Setup Canes' : 'Setup Trellis')}
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-between border-b border-earth-100/60 pb-2 text-xs text-zinc-500">
-                  <span>Self-supporting structure. No frame or cage required.</span>
+                  <span>Self-supporting structure. No frame or cane support required.</span>
                   <span className="text-[10px] bg-zinc-200/60 text-zinc-500 px-2 py-0.5 rounded">None</span>
                 </div>
               )}
@@ -396,7 +435,7 @@ export default function PlanterCard({
         )}
 
         {activeTab === 'layout' && (
-          <EarthboxLayoutDiagram plant={plant} />
+          <EarthboxLayoutDiagram plant={plant} planterType={planter.planterType} plantCount={planter.plantCount} />
         )}
       </div>
     </div>

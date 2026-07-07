@@ -330,7 +330,7 @@ export default function App() {
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-display font-extrabold text-xs uppercase tracking-widest text-earth-400 flex items-center gap-1.5">
                     <Trees className="w-4 h-4 text-earth-500" />
-                    Managed Earthboxes ({planters.length})
+                    Managed Planters ({planters.length})
                   </h3>
                   
                   <button
