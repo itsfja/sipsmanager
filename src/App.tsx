@@ -7,6 +7,7 @@ import WeatherWidget from './components/WeatherWidget';
 import PlanterCard from './components/PlanterCard';
 import AddPlanterModal from './components/AddPlanterModal';
 import PestDiagnosticModule from './components/PestDiagnosticModule';
+import CreditsModal from './components/CreditsModal';
 import { getLocalPlantName } from './utils/localization';
 import { 
   Sprout, 
@@ -31,6 +32,7 @@ export default function App() {
   const [geocode, setGeocode] = useState<GeocodeResult | null>(null);
   const [alerts, setAlerts] = useState<NotificationAlert[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
 
   // Detect physical app builds (Capacitor context), mobile user agents, or smaller responsive screens
@@ -294,6 +296,15 @@ export default function App() {
                   postcode={activeUser.postcode}
                 />
 
+                {/* About & Credits trigger */}
+                <button
+                  onClick={() => setShowCredits(true)}
+                  title="Project Credits & Trademarks"
+                  className="p-2.5 rounded-full bg-white/10 border border-white/20 hover:bg-white/20 transition-colors text-white cursor-pointer"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                </button>
+
                 {/* Logout trigger */}
                 <button
                   onClick={handleLogout}
@@ -420,9 +431,12 @@ export default function App() {
           </div>
         ) : (
           <div className="flex-1 bg-earth-50 flex flex-col justify-center overflow-y-auto leading-normal">
-            <AuthScreen onLoginSuccess={handleLogin} />
+            <AuthScreen onLoginSuccess={handleLogin} onShowCredits={() => setShowCredits(true)} />
           </div>
         )}
+
+        {/* Global Credits & Trademarks Modal */}
+        <CreditsModal isOpen={showCredits} onClose={() => setShowCredits(false)} />
       </div>
     </div>
   );
