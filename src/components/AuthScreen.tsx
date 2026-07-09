@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
-import { ShieldCheck, User, MapPin, Trees, Fingerprint, Users, ChevronRight, Sprout } from 'lucide-react';
+import { ShieldCheck, User, MapPin, Trees, Users, ChevronRight, Sprout, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface AuthScreenProps {
@@ -12,7 +12,6 @@ export default function AuthScreen({ onLoginSuccess, onShowCredits }: AuthScreen
   const [username, setUsername] = useState('');
   const [postcode, setPostcode] = useState('WA11 0SD'); // Default UK Postcode
   const [errorMsg, setErrorMsg] = useState('');
-  const [useBiometrics, setUseBiometrics] = useState(false);
   const [recentUsers, setRecentUsers] = useState<UserProfile[]>([]);
 
   const getStoredUsers = () => {
@@ -50,19 +49,19 @@ export default function AuthScreen({ onLoginSuccess, onShowCredits }: AuthScreen
     let targetProfile: UserProfile;
 
     if (users[normalizedKey]) {
-      // Select existing profile and update postcode/biometrics if changed
+      // Select existing profile and update postcode if changed
       targetProfile = {
         ...users[normalizedKey].profile,
         username: username.trim(),
         postcode: postcode.trim(),
-        hasBiometrics: useBiometrics,
+        hasBiometrics: false,
       };
     } else {
       // Create fresh new profile
       targetProfile = {
         username: username.trim(),
         postcode: postcode.trim(),
-        hasBiometrics: useBiometrics,
+        hasBiometrics: false,
         avatarSeed: Math.random().toString(36).substring(2, 7)
       };
     }
@@ -79,29 +78,27 @@ export default function AuthScreen({ onLoginSuccess, onShowCredits }: AuthScreen
   const selectExistingProfile = (profile: UserProfile) => {
     setUsername(profile.username);
     setPostcode(profile.postcode);
-    setUseBiometrics(profile.hasBiometrics || false);
     
     // Automatically login on selection for supreme instant access!
     onLoginSuccess(profile);
   };
 
-  const handleMockBiometrics = () => {
-    const newProfile: UserProfile = {
-      username: 'gardener',
-      postcode: 'WA11 0SD',
-      city: 'Saint Helens',
-      state: 'United Kingdom',
-      hasBiometrics: true,
-      avatarSeed: 'g123'
-    };
-
+  const deleteProfile = (e: React.MouseEvent, usernameToDelete: string) => {
+    e.stopPropagation();
     const users = getStoredUsers();
-    users['gardener'] = {
-      password: '',
-      profile: newProfile
-    };
-    localStorage.setItem('earthbox_users', JSON.stringify(users));
-    onLoginSuccess(newProfile);
+    const normalizedKey = usernameToDelete.trim().toLowerCase();
+    if (users[normalizedKey]) {
+      delete users[normalizedKey];
+      localStorage.setItem('earthbox_users', JSON.stringify(users));
+      
+      // Also delete other local storage keys for this user to clean up fully
+      localStorage.removeItem(`earthbox_boxes_${normalizedKey}`);
+      localStorage.removeItem(`earthbox_alerts_${normalizedKey}`);
+      
+      // Update state
+      const updatedProfiles = Object.values(users).map((u: any) => u.profile) as UserProfile[];
+      setRecentUsers(updatedProfiles);
+    }
   };
 
   return (
@@ -188,20 +185,6 @@ export default function AuthScreen({ onLoginSuccess, onShowCredits }: AuthScreen
             </p>
           </div>
 
-          {/* Simulate Biometric Enable switch */}
-          <div className="flex items-center justify-between mt-1 pt-1 border-t border-dashed border-zinc-100">
-            <span className="text-[11px] text-zinc-500 flex items-center gap-1">
-              <Fingerprint className="w-4 h-4 text-emerald-600" />
-              Enable Android Biometric Auth
-            </span>
-            <input
-              type="checkbox"
-              checked={useBiometrics}
-              onChange={() => setUseBiometrics(!useBiometrics)}
-              className="accent-emerald-600 rounded cursor-pointer"
-            />
-          </div>
-
           {/* Proceed Submit button */}
           <button
             type="submit"
@@ -219,14 +202,16 @@ export default function AuthScreen({ onLoginSuccess, onShowCredits }: AuthScreen
               <Users className="w-3.5 h-3.5 text-zinc-400" />
               <span>RECENT GROWERS ON THIS DEVICE</span>
             </div>
-            <div className="max-h-[110px] overflow-y-auto space-y-1.5 pr-1">
+            <div className="max-h-[130px] overflow-y-auto space-y-1.5 pr-1">
               {recentUsers.slice(0, 3).map((u) => (
-                <button
+                <div
                   key={`recent-${u.username}`}
-                  onClick={() => selectExistingProfile(u)}
-                  className="w-full flex items-center justify-between p-2 rounded-xl bg-zinc-50 hover:bg-emerald-50/70 border border-zinc-200/50 hover:border-emerald-200 text-left transition-all group"
+                  className="flex items-center justify-between p-2 rounded-xl bg-zinc-50 hover:bg-emerald-50/40 border border-zinc-200/50 hover:border-emerald-200/85 transition-all group"
                 >
-                  <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => selectExistingProfile(u)}
+                    className="flex-1 flex items-center gap-2 text-left cursor-pointer focus:outline-none"
+                  >
                     <div className="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold font-mono text-[10px]">
                       {u.username.substring(0, 2).toUpperCase()}
                     </div>
@@ -234,30 +219,33 @@ export default function AuthScreen({ onLoginSuccess, onShowCredits }: AuthScreen
                       <p className="text-xs font-semibold text-zinc-800">{u.username}</p>
                       <p className="text-[9px] text-zinc-400">Loc: {u.postcode}</p>
                     </div>
+                  </button>
+                  <div className="flex items-center gap-1 pl-2">
+                    <button
+                      onClick={(e) => deleteProfile(e, u.username)}
+                      title={`Remove ${u.username}`}
+                      className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer focus:outline-none"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => selectExistingProfile(u)}
+                      className="p-1 rounded-lg text-zinc-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all cursor-pointer focus:outline-none"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
-                </button>
+                </div>
               ))}
             </div>
           </div>
         )}
-
-        {/* Biometrics Immediate Bypass button for rapid review */}
-        <div className="mt-4 pt-3 border-t border-zinc-100 flex flex-col gap-2">
-          <button
-            onClick={handleMockBiometrics}
-            className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-2xl py-2.5 border border-zinc-200 font-display font-semibold text-[11px] flex items-center justify-center gap-2 cursor-pointer transition-colors"
-          >
-            <Fingerprint className="w-4 h-4 text-emerald-600" />
-            <span>Bypass Auth (Simulate Denver Postcode)</span>
-          </button>
-        </div>
       </motion.div>
 
       {/* App Version Indicator */}
       <div className="text-[10px] text-zinc-400 font-mono mt-6 text-center tracking-wide flex flex-col items-center gap-1.5" id="auth-version-indicator">
         <div>
-          App Version: <span className="font-bold text-zinc-500">v2.6.0</span> (Capacitor Native Build)
+          App Version: <span className="font-bold text-zinc-500">v2.7.0</span> (Capacitor Native Build)
         </div>
         <button
           type="button"

@@ -22,19 +22,46 @@ export function estimateLastFrostDate(latitude: number): string {
   if (absoluteLat < 25) {
     return "Frost Free Zone (Hardiness Zone 11-13). No freeze issues anticipated.";
   }
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  
+  // Define the spring last frost dates
+  let dateText = "";
+  let zoneText = "";
+  let cutoffDate = new Date();
+
   if (absoluteLat < 30) {
-    return "February 15 (Hardiness Zone 9-10). Freeze risks are low.";
+    dateText = "February 15";
+    zoneText = "Hardiness Zone 9-10";
+    cutoffDate = new Date(currentYear, 1, 15);
+  } else if (absoluteLat < 35) {
+    dateText = "March 15";
+    zoneText = "Hardiness Zone 8";
+    cutoffDate = new Date(currentYear, 2, 15);
+  } else if (absoluteLat < 40) {
+    dateText = "April 10";
+    zoneText = "Hardiness Zone 7";
+    cutoffDate = new Date(currentYear, 3, 10);
+  } else if (absoluteLat < 45) {
+    dateText = "May 5";
+    zoneText = "Hardiness Zone 5-6";
+    cutoffDate = new Date(currentYear, 4, 5);
+  } else {
+    dateText = "May 25";
+    zoneText = "Hardiness Zone 3-4";
+    cutoffDate = new Date(currentYear, 4, 25);
   }
-  if (absoluteLat < 35) {
-    return "March 15 (Hardiness Zone 8). Moderate risk of early spring freeze.";
+
+  const autumnRiskStart = new Date(currentYear, 8, 1); // September 1st
+
+  // If we are between the spring last frost date and the start of autumn (Sept 1)
+  if (now >= cutoffDate && now < autumnRiskStart) {
+    return "Last frost risk passed";
+  } else {
+    // It's autumn/winter/early spring, so there is risk ahead until next spring's last frost date
+    return `Frosts predicted until ${dateText} (${zoneText})`;
   }
-  if (absoluteLat < 40) {
-    return "April 10 (Hardiness Zone 7). Mild temperate zone. Keep freeze wraps ready until late April.";
-  }
-  if (absoluteLat < 45) {
-    return "May 5 (Hardiness Zone 5-6). Traditional frost zone. Avoid early planting out of greenhouse.";
-  }
-  return "May 25 (Hardiness Zone 3-4). Short growing season. Severe spring freeze risk.";
 }
 
 /**
@@ -90,11 +117,30 @@ export async function geocodePostcode(postcode: string): Promise<GeocodeResult> 
 }
 
 function getFallbackGeocode(postcode: string): GeocodeResult {
-  // Semi-deterministic coordinates based on sum of digits to keep preview consistent
+  const clean = postcode.trim().toUpperCase();
+  // Check if it matches a UK postcode prefix, contains letters (US postcodes are purely numeric), or explicitly mentions UK/GB
+  const isUK = /^[A-Z]{1,2}\d/i.test(clean) || clean.includes("UK") || clean.includes("GB") || /[A-Z]/i.test(clean);
+  
   let numSum = 0;
   for (let i = 0; i < postcode.length; i++) {
     const code = postcode.charCodeAt(i);
     if (code >= 48 && code <= 57) numSum += (code - 48);
+  }
+
+  if (isUK) {
+    // UK coordinates: Lat around 53.48 (Saint Helens), Lon around -2.71.
+    // Let's make it deterministic but focused precisely around Saint Helens / Haydock / Merseyside region.
+    const lat = 53.45 + (numSum % 10) * 0.01; 
+    const lon = -2.75 + (numSum % 10) * 0.01;
+    
+    return {
+      latitude: lat,
+      longitude: lon,
+      name: "Saint Helens",
+      admin1: "Merseyside",
+      country: "United Kingdom",
+      postcode: postcode.toUpperCase()
+    };
   }
   
   const lat = 34 + (numSum % 14); // 34.0 to 48.0 degrees lat

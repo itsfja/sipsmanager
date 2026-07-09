@@ -114,10 +114,15 @@ export default function App() {
         localStorage.setItem(`earthbox_boxes_${activeUser.username.toLowerCase()}`, JSON.stringify(defaultPlanters));
       }
 
-      // Restore active alert logs
+      // Restore active alert logs, filtering out simulated warnings on restart
       const savedAlerts = localStorage.getItem(`earthbox_alerts_${activeUser.username.toLowerCase()}`);
       if (savedAlerts) {
-        setAlerts(JSON.parse(savedAlerts));
+        const parsed = JSON.parse(savedAlerts);
+        const nonSimulated = parsed.filter((a: NotificationAlert) => 
+          !['sim-val-freeze', 'sim-val-wind', 'sim-val-heat', 'sim-freeze', 'sim-wind', 'sim-heat'].includes(a.id)
+        );
+        setAlerts(nonSimulated);
+        localStorage.setItem(`earthbox_alerts_${activeUser.username.toLowerCase()}`, JSON.stringify(nonSimulated));
       } else {
         // Starter Welcome push alert
         const welcomeAlert: NotificationAlert = {

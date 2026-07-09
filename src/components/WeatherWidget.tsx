@@ -173,13 +173,17 @@ export default function WeatherWidget({ postcode, onWeatherDataLoaded, onTrigger
           {/* Last frost date prediction panel */}
           <div className="p-4 bg-earth-600 text-white rounded-2xl flex flex-col gap-1.5 border border-earth-700 shadow-sm">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-mono font-extrabold tracking-widest text-earth-300">PREDICTED SPRING LAST FROST DATE</span>
+              <span className="text-[10px] font-mono font-extrabold tracking-widest text-earth-300">
+                {frostInfo === "Last frost risk passed" ? "FROST RISK ASSESSMENT" : "PREDICTED SPRING LAST FROST DATE"}
+              </span>
               <span className="text-[8.5px] bg-white/15 px-2 py-0.5 text-earth-100 font-mono uppercase rounded border border-white/10">Zone Grid</span>
             </div>
             <p className="text-lg font-serif font-black italic text-white">{frostInfo}</p>
-            <p className="text-[10px] text-earth-100 leading-normal leading-relaxed">
-              {localizeMessage("Soil sub-surface models verify that seedlings shouldn't be planted out of cold frames until soil matches 60°F consistently.", postcode)}
-            </p>
+            {frostInfo !== "Last frost risk passed" && (
+              <p className="text-[10px] text-earth-100 leading-normal leading-relaxed">
+                {localizeMessage("Soil sub-surface models verify that seedlings shouldn't be planted out of cold frames until soil matches 60°F consistently.", postcode)}
+              </p>
+            )}
           </div>
 
           {/* 4 Day Forecast List */}
