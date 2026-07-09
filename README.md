@@ -1,104 +1,71 @@
 # The Ladybird Book of SIPS Manager
 
-*A simple, step-by-step guide to building, syncing, and deploying your Companion App.*
+*A gentle, friendly guide to help you look after your plants, check the weather, and manage your garden companion.*
 
 ---
 
-## Part One: How the SIPS Manager finds the Weather
+## This is Peter and Jane's Garden.
 
-When you type a postcode like **WA11 0SD**, the SIPS Manager speaks to weather satellites in the sky. 
+Peter and Jane love to grow things. They grow juicy tomatoes, sweet basil, and leafy greens. To keep their plants happy and watered from below, they use a special **Sub-Irrigated Planter System**, which we call a **SIPS Box**. 
 
-* **The Quick Fallback**: Sometimes, the satellites do not know the exact seven letters of your street postcode. When this happens, SIPS Manager now knows you are in the **United Kingdom**. It automatically places your garden in beautiful **Saint Helens, Merseyside**, and gathers real-time temperatures for the Northwest. No more scorching Arizona heat in your English garden!
-
----
-
-## Part Two: The Magic of Syncing Your App
-
-When you make changes to SIPS Manager, you must tell Android Studio that a new version is ready. Android Studio can be a little forgetful and will insist on running the old version (2.5.1) until you gently remind it.
-
-### Step 1: Tell the Computer to Build the New Files
-Open your terminal on your computer and run:
-```bash
-npm run build
-```
-This gathers all your fresh code and bundles it neatly inside the `dist` folder.
-
-### Step 2: Sync the Files to Android
-Now, we must copy those fresh files into your Android folder so Android Studio can see them:
-```bash
-npx cap sync
-```
-*Note: This command tells Capacitor to carry the new web files straight to your Android project's assets.*
-
-### Step 3: Bump the Version Number (To satisfy Google Play)
-If Android Studio still displays version `2.6.0` or if the Play Store asks for a new version, you must change the numbers in two places:
-1. Open `package.json` in your web code and change `"version": "2.7.0"` to your new version.
-2. Open `android/app/build.gradle` in Android Studio. Look for `versionCode` and `versionName`:
-   ```groovy
-   defaultConfig {
-       versionCode 4  // Increment this by 1 every time you publish (e.g., from 3 to 4)
-       versionName "2.7.0" // Match this with your package.json version
-   }
-   ```
+The **SIPS Manager** is their digital companion app. It helps them watch over their garden, listen to the weather, and keep their plants healthy and strong.
 
 ---
 
-## Part Three: Moving Folders and Clearing the Path
+## Chapter One: Finding the Weather for Your Garden
 
-If you rename your folder (for example, from `Earthbox` to `sipsmanager`), Android Studio and Gradle might get confused. They will look for the old folder name and say: *"Could not set process working directory..."*
+Every garden has a sky of its own. When you first open the SIPS Manager, it asks you who you are and where your garden lives.
 
-Here is how we let Gradle sweep its path index clean:
-
-1. **Close Android Studio** completely.
-2. **Open a fresh Terminal / Command Prompt**. (If you use the old window, it will still be whispering the old folder name!).
-3. Navigate to your renamed folder:
-   ```cmd
-   cd C:\Users\armst\Earthbox\sipsmanager
-   ```
-4. **Delete the Hidden Cache Folders** to let Android Studio start fresh. You can delete these folders safely:
-   - The `.gradle` folder
-   - The `.idea` folder
-   - The `build` folder inside your `android` project
-5. **Reopen Android Studio** and select **"Open an Existing Project"**, then choose the new `sipsmanager/android` folder. 
-6. Click **File -> Invalidate Caches -> Invalidate and Restart**. Gradle will happily rebuild its path index from scratch!
+1. **Your Name**: You can type your name so SIPS Manager knows whose garden it is visiting.
+2. **Your Postcode**: When you type your postcode (like **WA11 0SD**), SIPS Manager looks up to the sky to find the real temperature and clouds above your home.
+3. **The Saint Helens Miracle**: If the satellite is busy and doesn't know your exact local lane, it understands that you are in the **United Kingdom**. It will automatically set your weather station to beautiful **Saint Helens, Merseyside**! Now your plants will always get Northwest temperatures instead of scorching desert readings.
 
 ---
 
-## Part Four: Gentle Gradle Warnings Explained
+## Chapter Two: The Frost Risk Assessment
 
-Sometimes, Gradle will show little warnings in yellow. These are just helpful suggestions, like a friendly ladybird landing on your sleeve.
+Frost is very cold. It can turn a young green shoot into ice! SIPS Manager is very clever and watches the calendar to tell you when it is safe to plant.
 
-### 1. "Avoid `getDefaultProguardFile('proguard-android.txt')`"
-* **What it means**: Gradle has a newer, optimized rules list for shrinking your app.
-* **The Easy Fix**: Inside your `android/app/build.gradle`, find the line:
-  ```groovy
-  proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-  ```
-  And change it to the modern version:
-  ```groovy
-  proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-  ```
+### When the Sun is Warm (Spring & Summer)
+If the date of the last spring frost has safely passed, SIPS Manager will display:
+* **"Last frost risk passed"**
 
-### 2. "Using flatDir should be avoided..."
-* **What it means**: flatDir is a simple folder of files. Modern Android apps prefer getting libraries from secure online repositories (like Maven Central) so they have metadata.
-* **The Easy Fix**: You can safely ignore this! It usually comes from pre-configured plugins (like Capacitor's internal bridges) and will not prevent your app from compiling or being accepted by the Play Store.
+When the risk of frost is gone, SIPS Manager clears away all the serious warnings about sub-surface soil models. It knows you are ready to enjoy your summer growing!
+
+### When the Days Grow Short (Autumn, Winter & Early Spring)
+As autumn arrives and winter is on its way, SIPS Manager starts to watch the thermometer again. It will display:
+* **"Frosts predicted until [Last Frost Date]"**
+
+When this prediction is shown, SIPS Manager will also give you a wise piece of advice: *soil sub-surface models verify that seedlings shouldn't be planted out of cold frames until soil matches 60°F consistently.* This is SIPS Manager's way of reminding you to tuck your baby plants in warm and safe.
 
 ---
 
-## Part Five: Getting Your App onto the Play Store
+## Chapter Three: Managing Your Growers
 
-Publishing an app is like sowing seeds—it takes a little patience, but the harvest is wonderful!
+Sometimes, more than one person wants to use the companion app on the same phone or tablet. Peter, Jane, and Mummy can all have their own profiles!
 
-1. **Generate a Signed Bundle (AAB)**:
-   - In Android Studio, go to the top menu and select **Build > Generate Signed Bundle / APK**.
-   - Choose **Android App Bundle** and click Next.
-   - Create a new secure **Keystore file** (store this in a safe place and don't forget the password—you will need it for all future updates!).
-   - Choose **release** build, and click Finish. Android Studio will generate a `.aab` file.
-2. **Set up Google Play Console**:
-   - Go to [Google Play Console](https://play.google.com/console) and register for a Developer Account.
-   - Click **Create App** and fill in your app's name (**SIPS Manager**), description, and default language.
-3. **Upload Your Release**:
-   - Navigate to **Production** under the Release menu.
-   - Create a new release and drag your `.aab` file into the upload box.
-   - Complete the standard content rating questionnaires and privacy policy details.
-   - Click **Start Rollout to Production**! Google's friendly reviewers will check your app, and in a few days, it will be live for growers all over the world!
+* **Switching Growers**: On the front screen, you will see a list of **Recent Growers on This Device**. You can tap your name to step straight into your garden.
+* **Removing a Grower**: If a helper has finished their season, or if a profile is no longer needed, you can click the red **Bin Icon** next to their name. This will clean the device and remove their profile and boxes safely.
+
+---
+
+## Chapter Four: Tending Your SIPS Boxes
+
+Inside your digital garden dashboard, you will find cards that represent each of your physical planter boxes.
+
+1. **The Water Level**: Keep an eye on the blue bar! It shows you how much water is left in the reservoir under the soil. If it gets low, it is time to fetch your watering can and fill the SIPS tube.
+2. **The Soil Moisture**: This tells you how damp the compost is around your plant's roots.
+3. **The Gardening Diary**: At the bottom of each box, you can write diary entries! You can note when you added fertilizer, when you saw the first yellow blossom, or when you pinched out the tomato side-shoots.
+
+---
+
+## Chapter Five: The Pest Diagnostic Helper
+
+Sometimes, tiny insects or bugs come to visit our leaves. Some, like the friendly ladybird, are very helpful garden friends! Others can make our plants feel poorly.
+
+* If you notice strange spots or nibbled leaves, open the **Pest Diagnostic Assistant** at the bottom of your screen. 
+* It will help you identify what is visiting your garden and teach you how to ask them to leave, using natural and organic ways that keep the birds and bees happy.
+
+---
+
+*Remember: A garden is a place of wonder. With a little care, some water from below, and your SIPS Manager companion, your plants will flourish beautifully!*
